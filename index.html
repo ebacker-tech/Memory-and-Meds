@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Memory & Meds">
+<title>Memory & Meds</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a1a;background:#f5f5f0;max-width:680px;margin:0 auto;min-height:100vh}
+@media(prefers-color-scheme:dark){body{color:#f0f0f0;background:#1a1a1a}}
+
+.screen{display:none}.screen.active{display:block}
+
+/* AUTH */
+.auth-wrap{padding:2rem 1.25rem;max-width:340px;margin:0 auto}
+.auth-logo{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#5DCAA5,#1D9E75);display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 1rem}
+.auth-title{font-size:20px;font-weight:600;text-align:center;margin-bottom:.25rem}
+.auth-sub{font-size:13px;color:#666;text-align:center;margin-bottom:1.5rem}
+@media(prefers-color-scheme:dark){.auth-sub{color:#aaa}}
+.auth-input-wrap{margin-bottom:.75rem}
+.auth-input-wrap label{font-size:12px;color:#666;display:block;margin-bottom:4px}
+@media(prefers-color-scheme:dark){.auth-input-wrap label{color:#aaa}}
+.auth-input-wrap input{width:100%;padding:.6rem .75rem;border:1px solid #ddd;border-radius:8px;font-size:14px;color:#1a1a1a;background:#fff}
+@media(prefers-color-scheme:dark){.auth-input-wrap input{border-color:#444;background:#2a2a2a;color:#f0f0f0}}
+.auth-err{font-size:12px;color:#D85A30;margin-bottom:.5rem;min-height:16px}
+.btn-primary{width:100%;padding:.7rem;border-radius:8px;background:#1D9E75;color:#fff;border:none;cursor:pointer;font-size:14px;font-weight:600;margin-bottom:.5rem}
+.btn-link{width:100%;background:none;border:none;cursor:pointer;font-size:13px;color:#888;padding:.25rem}
+.divider{display:flex;align-items:center;gap:8px;margin:.75rem 0;color:#aaa;font-size:12px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:#e0e0e0}
+@media(prefers-color-scheme:dark){.divider::before,.divider::after{background:#444}}
+
+/* APP HEADER */
+.app-header{display:flex;align-items:center;gap:10px;padding:.875rem 1rem .5rem;border-bottom:1px solid #e8e8e8;background:#fff}
+@media(prefers-color-scheme:dark){.app-header{background:#222;border-color:#333}}
+.app-icon{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#5DCAA5,#1D9E75);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.app-title{font-size:16px;font-weight:600}
+.app-sub{font-size:11px;color:#888}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:6px}
+.group-badge{font-size:11px;padding:3px 9px;border-radius:12px;background:#E1F5EE;color:#0F6E56;font-weight:500}
+.logout-btn{font-size:12px;color:#888;background:none;border:none;cursor:pointer;padding:4px 6px}
+.refresh-btn{font-size:13px;padding:4px 10px;border-radius:7px;border:1px solid #ddd;background:none;cursor:pointer;color:#555;display:flex;align-items:center;gap:4px;transition:all .15s}
+@media(prefers-color-scheme:dark){.refresh-btn{border-color:#444;color:#aaa}}
+.refresh-btn:hover{background:#f0f0f0}
+@media(prefers-color-scheme:dark){.refresh-btn:hover{background:#2a2a2a}}
+.refresh-btn:disabled{opacity:.5;cursor:default}
+.spin{display:inline-block}
+.spinning{animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.refresh-ts{font-size:10px;color:#aaa;padding:0 .875rem .25rem;text-align:right;background:#fff}
+@media(prefers-color-scheme:dark){.refresh-ts{background:#222}}
+
+/* ALERTS */
+.alert-banner{margin:.625rem .875rem;padding:.625rem .875rem;border-radius:8px;font-size:13px;display:none}
+.alert-banner.warning{background:#FAEEDA;color:#854F0B;border:1px solid #FAC775;display:block}
+.alert-banner.danger{background:#FAECE7;color:#993C1D;border:1px solid #F5C4B3;display:block}
+.alert-list{margin-top:4px;padding-left:1rem}
+.alert-list li{margin-top:2px}
+
+/* TABS */
+.tab-bar{display:flex;border-bottom:1px solid #e8e8e8;background:#fff;position:sticky;top:0;z-index:10}
+@media(prefers-color-scheme:dark){.tab-bar{background:#222;border-color:#333}}
+.tab{flex:1;padding:.7rem .5rem;font-size:13px;font-weight:400;color:#888;border:none;background:none;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;position:relative}
+.tab.active{color:#0F6E56;font-weight:600;border-bottom:2px solid #1D9E75}
+.tab-badge{position:absolute;top:6px;right:calc(50% - 18px);background:#D85A30;color:#fff;font-size:9px;border-radius:8px;padding:1px 5px;min-width:14px;text-align:center}
+.tab-content{display:none;padding:1rem;background:#f5f5f0;min-height:calc(100vh - 140px)}
+@media(prefers-color-scheme:dark){.tab-content{background:#1a1a1a}}
+.tab-content.active{display:block}
+
+/* STAT CARDS */
+.stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:1rem}
+.stat-card{background:#fff;border-radius:10px;padding:.875rem 1rem;border:1px solid #e8e8e8}
+@media(prefers-color-scheme:dark){.stat-card{background:#2a2a2a;border-color:#333}}
+.stat-label{font-size:12px;color:#888;margin-bottom:4px}
+.stat-value{font-size:22px;font-weight:600}
+.stat-sub{font-size:11px;color:#aaa;margin-top:2px}
+.section-label{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:.07em;margin-bottom:.5rem;margin-top:1rem}
+.chart-wrap{position:relative;width:100%;height:180px;background:#fff;border-radius:10px;padding:12px;border:1px solid #e8e8e8}
+@media(prefers-color-scheme:dark){.chart-wrap{background:#2a2a2a;border-color:#333}}
+
+/* MED ROWS */
+.med-row{display:flex;align-items:center;justify-content:space-between;padding:.6rem .75rem;border-bottom:1px solid #f0f0f0;font-size:14px;background:#fff}
+@media(prefers-color-scheme:dark){.med-row{background:#2a2a2a;border-color:#333}}
+.med-row:first-child{border-radius:10px 10px 0 0}
+.med-row:last-child{border-bottom:none;border-radius:0 0 10px 10px}
+.med-badge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:500}
+.badge-ok{background:#E1F5EE;color:#0F6E56}
+.badge-due{background:#FAEEDA;color:#854F0B}
+.btn-sm{padding:4px 12px;font-size:12px;border-radius:6px;background:none;border:1px solid #ddd;cursor:pointer;color:#555;font-weight:500}
+@media(prefers-color-scheme:dark){.btn-sm{border-color:#444;color:#aaa}}
+
+/* CALENDAR */
+.cal-wrap{background:#fff;border-radius:10px;padding:1rem;border:1px solid #e8e8e8}
+@media(prefers-color-scheme:dark){.cal-wrap{background:#2a2a2a;border-color:#333}}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
+.cal-nav-btn{background:none;border:1px solid #ddd;border-radius:8px;padding:5px 14px;cursor:pointer;font-size:16px;color:#555}
+@media(prefers-color-scheme:dark){.cal-nav-btn{border-color:#444;color:#aaa}}
+.cal-month{font-size:16px;font-weight:600}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}
+.cal-dow{font-size:11px;text-align:center;color:#aaa;padding-bottom:6px;font-weight:600}
+.cal-day{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:6px;cursor:pointer;border:1px solid transparent;transition:border-color .1s}
+.cal-day:hover{border-color:#ccc}
+.cal-day.today{border-color:#1D9E75!important;border-width:2px}
+.cal-day.empty{cursor:default}
+.cal-day-num{font-size:12px;color:#888}
+.cal-dot{width:6px;height:6px;border-radius:50%}
+.cal-day[data-sev="1"]{background:#E1F5EE}.cal-day[data-sev="2"]{background:#e8f9f3}
+.cal-day[data-sev="3"]{background:#f0f9e2}.cal-day[data-sev="4"]{background:#fdf5e0}
+.cal-day[data-sev="5"]{background:#fdf0d1}.cal-day[data-sev="6"]{background:#fde8b5}
+.cal-day[data-sev="7"]{background:#fde0cc}.cal-day[data-sev="8"]{background:#fbd4c0}
+.cal-day[data-sev="9"]{background:#f9c4ad}.cal-day[data-sev="10"]{background:#FAECE7}
+.log-legend{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem;font-size:11px}
+.legend-item{display:flex;align-items:center;gap:4px;color:#888}
+
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:100;align-items:flex-end;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:#fff;border-radius:16px 16px 0 0;padding:1.25rem;width:100%;max-width:680px;border-top:1px solid #e8e8e8;max-height:88vh;overflow-y:auto;padding-bottom:calc(1.25rem + env(safe-area-inset-bottom))}
+@media(prefers-color-scheme:dark){.modal{background:#222;border-color:#333}}
+.modal h3{font-size:15px;font-weight:600;margin-bottom:1rem}
+.form-row{margin-bottom:.875rem}
+.form-row label{font-size:12px;color:#888;display:block;margin-bottom:4px}
+.sev-picker{display:flex;gap:4px;flex-wrap:wrap}
+.sev-btn{width:34px;height:34px;border-radius:50%;border:2px solid transparent;cursor:pointer;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;transition:transform .1s}
+.sev-btn:hover{transform:scale(1.1)}
+.sev-btn.selected{border-color:#1a1a1a}
+@media(prefers-color-scheme:dark){.sev-btn.selected{border-color:#f0f0f0}}
+.tag-row{display:flex;flex-wrap:wrap;gap:5px}
+.tag-btn{font-size:12px;padding:5px 11px;border-radius:16px;border:1px solid #ddd;background:none;cursor:pointer;color:#666;transition:all .1s}
+@media(prefers-color-scheme:dark){.tag-btn{border-color:#444;color:#aaa}}
+.tag-btn.selected{background:#E1F5EE;color:#0F6E56;border-color:#5DCAA5}
+textarea{width:100%;border:1px solid #ddd;border-radius:8px;padding:.6rem;font-family:inherit;font-size:13px;color:#1a1a1a;background:#fff;resize:none}
+@media(prefers-color-scheme:dark){textarea{border-color:#444;background:#2a2a2a;color:#f0f0f0}}
+.btn-row{display:flex;gap:8px;margin-top:.75rem}
+.btn-save{flex:1;padding:.7rem;border-radius:8px;background:#1D9E75;color:#fff;border:none;cursor:pointer;font-size:14px;font-weight:600}
+.btn-cancel{padding:.7rem 1rem;border-radius:8px;background:none;color:#888;border:1px solid #ddd;cursor:pointer;font-size:14px}
+@media(prefers-color-scheme:dark){.btn-cancel{border-color:#444}}
+
+/* MEDS TAB */
+.card{background:#fff;border-radius:10px;border:1px solid #e8e8e8;margin-bottom:1rem;overflow:hidden}
+@media(prefers-color-scheme:dark){.card{background:#2a2a2a;border-color:#333}}
+.card-title{font-size:14px;font-weight:600;padding:.75rem 1rem;border-bottom:1px solid #f0f0f0}
+@media(prefers-color-scheme:dark){.card-title{border-color:#333}}
+.med-manage-row{display:flex;align-items:center;gap:8px;padding:.5rem .75rem;border-bottom:1px solid #f0f0f0}
+@media(prefers-color-scheme:dark){.med-manage-row{border-color:#333}}
+.med-manage-row:last-child{border-bottom:none}
+.med-manage-name{flex:1;font-size:13px}
+.med-manage-time{font-size:11px;color:#aaa;min-width:52px}
+.med-del{background:none;border:none;cursor:pointer;color:#D85A30;font-size:18px;padding:0 4px;line-height:1}
+.add-med-row{display:flex;gap:6px;padding:.75rem}
+.add-med-row input{flex:1;padding:.5rem .625rem;border:1px solid #ddd;border-radius:7px;font-size:13px;color:#1a1a1a;background:#fff}
+@media(prefers-color-scheme:dark){.add-med-row input{border-color:#444;background:#1a1a1a;color:#f0f0f0}}
+.add-med-btn{padding:.5rem .875rem;border-radius:7px;background:#1D9E75;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:600}
+
+/* DATA TAB */
+.entry-item{display:flex;align-items:flex-start;gap:10px;padding:.75rem;border-bottom:1px solid #f0f0f0}
+@media(prefers-color-scheme:dark){.entry-item{border-color:#333}}
+.entry-item:last-child{border-bottom:none}
+.entry-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.entry-main{flex:1}
+.entry-date{font-size:11px;color:#aaa}
+.entry-who{font-size:11px;color:#1D9E75;font-weight:600}
+.entry-title{font-size:13px;margin-top:1px}
+.entry-tags{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
+.entry-tag{font-size:11px;padding:2px 8px;background:#f0f0f0;border-radius:10px;color:#666}
+@media(prefers-color-scheme:dark){.entry-tag{background:#333;color:#aaa}}
+.export-row{display:flex;gap:8px;padding:.75rem}
+.export-btn{flex:1;padding:.65rem;border-radius:8px;background:none;color:#555;border:1px solid #ddd;cursor:pointer;font-size:13px;font-weight:500;text-align:center}
+@media(prefers-color-scheme:dark){.export-btn{border-color:#444;color:#aaa}}
+
+.log-prompt{text-align:center;font-size:12px;color:#aaa;margin-top:1rem;padding-bottom:1rem}
+
+.toast{position:fixed;bottom:calc(20px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:#1D9E75;color:#fff;padding:10px 22px;border-radius:20px;font-size:13px;font-weight:500;opacity:0;transition:opacity .2s;pointer-events:none;z-index:200;white-space:nowrap}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="screen-auth" class="screen active">
+  <div class="auth-wrap">
+    <div class="auth-logo">🧠</div>
+    <div class="auth-title">Memory & Meds</div>
+    <div class="auth-sub">Shared cognitive health tracker</div>
+
+    <div id="auth-join-panel">
+      <div class="auth-input-wrap">
+        <label>Your name</label>
+        <input id="auth-name" placeholder="e.g. Mom, Sarah, Dr. Lee" maxlength="30">
+      </div>
+      <div class="auth-input-wrap">
+        <label>Group password</label>
+        <input id="auth-pw" type="password" placeholder="Enter group password">
+      </div>
+      <div class="auth-err" id="auth-err"></div>
+      <button class="btn-primary" onclick="joinGroup()">Join group</button>
+      <div class="divider">or</div>
+      <button class="btn-link" onclick="showCreate()">Create a new group</button>
+    </div>
+
+    <div id="auth-create-panel" style="display:none">
+      <div class="auth-input-wrap">
+        <label>Your name</label>
+        <input id="create-name" placeholder="e.g. Mom, Sarah" maxlength="30">
+      </div>
+      <div class="auth-input-wrap">
+        <label>Choose a group password</label>
+        <input id="create-pw" type="password" placeholder="Share this with your care team">
+      </div>
+      <div class="auth-input-wrap">
+        <label>Confirm password</label>
+        <input id="create-pw2" type="password" placeholder="Repeat password">
+      </div>
+      <div class="auth-err" id="create-err"></div>
+      <button class="btn-primary" onclick="createGroup()">Create group</button>
+      <div class="divider">or</div>
+      <button class="btn-link" onclick="showJoin()">Join an existing group</button>
+    </div>
+  </div>
+</div>
+
+<!-- APP SCREEN -->
+<div id="screen-app" class="screen">
+  <div class="app-header">
+    <div class="app-icon">🧠</div>
+    <div>
+      <div class="app-title">Memory & Meds</div>
+      <div class="app-sub" id="header-user"></div>
+    </div>
+    <div class="header-right">
+      <span class="group-badge" id="group-badge"></span>
+      <button class="refresh-btn" id="refresh-btn" onclick="manualRefresh()" title="Sync latest group data">
+        <span class="spin" id="refresh-icon">↻</span> Sync
+      </button>
+      <button class="logout-btn" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+  <div class="refresh-ts" id="refresh-ts"></div>
+
+  <div class="alert-banner" id="alert-banner"></div>
+
+  <div class="tab-bar">
+    <button class="tab active" onclick="switchTab('dashboard',this)">Dashboard</button>
+    <button class="tab" onclick="switchTab('calendar',this)">Calendar</button>
+    <button class="tab" onclick="switchTab('data',this)">Data</button>
+    <button class="tab" id="tab-meds-btn" onclick="switchTab('meds',this)">Meds <span class="tab-badge" id="med-badge" style="display:none">!</span></button>
+  </div>
+
+  <!-- DASHBOARD TAB -->
+  <div id="tab-dashboard" class="tab-content active">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-label">This month</div><div class="stat-value" id="stat-events">—</div><div class="stat-sub">memory events</div></div>
+      <div class="stat-card"><div class="stat-label">Avg severity</div><div class="stat-value" id="stat-avg">—</div><div class="stat-sub">out of 10</div></div>
+      <div class="stat-card"><div class="stat-label">Active members</div><div class="stat-value" id="stat-members">—</div><div class="stat-sub">in this group</div></div>
+      <div class="stat-card"><div class="stat-label">Meds today</div><div class="stat-value" id="stat-meds">—</div><div class="stat-sub">taken / scheduled</div></div>
+    </div>
+    <div class="section-label">Cognitive events — this month</div>
+    <div class="chart-wrap"><canvas id="dashChart"></canvas></div>
+    <div class="section-label">Today's medications</div>
+    <div id="med-list-today" style="border-radius:10px;overflow:hidden;border:1px solid #e8e8e8"></div>
+    <div style="margin-top:1rem">
+      <button class="btn-primary" onclick="openLogModal(null)">+ Log memory event</button>
+    </div>
+  </div>
+
+  <!-- CALENDAR TAB -->
+  <div id="tab-calendar" class="tab-content">
+    <div class="cal-wrap">
+      <div class="cal-nav">
+        <button class="cal-nav-btn" onclick="changeMonth(-1)">‹</button>
+        <div class="cal-month" id="cal-month-label"></div>
+        <button class="cal-nav-btn" onclick="changeMonth(1)">›</button>
+      </div>
+      <div class="log-legend">
+        <div class="legend-item"><span class="cal-dot" style="background:#9FE1CB"></span>1–2 mild</div>
+        <div class="legend-item"><span class="cal-dot" style="background:#FAC775"></span>3–5 moderate</div>
+        <div class="legend-item"><span class="cal-dot" style="background:#F5C4B3"></span>6–8 significant</div>
+        <div class="legend-item"><span class="cal-dot" style="background:#D85A30"></span>9–10 severe</div>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+    <div class="log-prompt">Tap a day to log or view entries</div>
+  </div>
+
+  <!-- DATA TAB -->
+  <div id="tab-data" class="tab-content">
+    <div class="card">
+      <div class="card-title">Recent entries</div>
+      <div id="entry-list"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Export / import</div>
+      <div class="export-row">
+        <button class="export-btn" onclick="exportCSV()">↓ Export CSV</button>
+        <label class="export-btn" style="cursor:pointer">↑ Import CSV<input type="file" accept=".csv" style="display:none" onchange="importCSV(event)"></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- MEDS TAB -->
+  <div id="tab-meds" class="tab-content">
+    <div class="card">
+      <div class="card-title">Medication list</div>
+      <div id="med-manage-list"></div>
+      <div class="add-med-row">
+        <input id="new-med-name" placeholder="Medication name">
+        <input id="new-med-time" placeholder="Time (e.g. 8 AM)" style="max-width:90px">
+        <button class="add-med-btn" onclick="addMed()">Add</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Taken today</div>
+      <div id="med-history-today"></div>
+    </div>
+  </div>
+</div>
+
+<!-- LOG MODAL -->
+<div class="modal-bg" id="modal-bg" onclick="closeModalOnBg(event)">
+  <div class="modal">
+    <h3 id="modal-title">Log memory event</h3>
+    <div class="form-row">
+      <label>Severity (1 = mild · 10 = severe)</label>
+      <div class="sev-picker" id="sev-picker"></div>
+    </div>
+    <div class="form-row">
+      <label>Event type</label>
+      <div class="tag-row" id="type-tags"></div>
+    </div>
+    <div class="form-row">
+      <label>Triggers / context</label>
+      <div class="tag-row" id="trigger-tags"></div>
+    </div>
+    <div class="form-row">
+      <label>Notes</label>
+      <textarea id="log-notes" rows="2" placeholder="Optional notes..."></textarea>
+    </div>
+    <div class="btn-row">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveEntry()">Save entry</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const EVENT_TYPES=['Word finding','Name recall','Short-term','Disorientation','Attention/focus','Task switching','Working memory','Spatial recall'];
+const TRIGGERS=['Poor sleep','Stress','Fatigue','Dehydration','Alcohol','Medication change','Illness','Hormones','Unknown'];
+const DEFAULT_MEDS=[{name:'Morning vitamin D',time:'8 AM'},{name:'Omega-3',time:'8 AM'},{name:'Memantine',time:'12 PM'},{name:'Evening supplement',time:'9 PM'}];
+
+let currentUser='',groupId='',entries=[],medications=[...DEFAULT_MEDS],medLogs={},members=new Set();
+let currentMonth=new Date().getMonth(),currentYear=new Date().getFullYear();
+let selectedSev=0,selectedTypes=new Set(),selectedTriggers=new Set(),editingDate=null,dashChart=null;
+let activeTab='dashboard',lastRefresh=null;
+
+// ── Storage helpers ──────────────────────────────────────────────
+function hashStr(s){let h=0;for(let i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0}return Math.abs(h).toString(16)}
+function groupKey(p){return`grp_${groupId}_${p}`}
+
+async function storeSet(k,v,sh=true){
+  try{await window.storage.set(k,JSON.stringify(v),sh)}catch(e){
+    // fallback to localStorage for local testing
+    try{localStorage.setItem(k,JSON.stringify(v))}catch(e2){}
+  }
+}
+async function storeGet(k,sh=true){
+  try{const r=await window.storage.get(k,sh);return r?JSON.parse(r.value):null}catch(e){
+    try{const r=localStorage.getItem(k);return r?JSON.parse(r):null}catch(e2){return null}
+  }
+}
+
+// ── Auth ─────────────────────────────────────────────────────────
+function today(){const d=new Date();return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`}
+
+async function loadGroupData(){
+  const[ents,meds,ml,meta]=await Promise.all([
+    storeGet(groupKey('entries')),storeGet(groupKey('meds')),
+    storeGet(groupKey('medlogs')),storeGet(groupKey('meta'))
+  ]);
+  entries=ents||[];medications=meds||DEFAULT_MEDS;medLogs=ml||{};
+  members=new Set(meta?.members||[currentUser]);
+  lastRefresh=new Date();updateRefreshTs();
+}
+
+function updateRefreshTs(){
+  const el=document.getElementById('refresh-ts');
+  if(!lastRefresh){el.textContent='';return}
+  const t=lastRefresh;
+  el.textContent=`Last synced ${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}:${String(t.getSeconds()).padStart(2,'0')}`;
+}
+
+async function manualRefresh(){
+  const btn=document.getElementById('refresh-btn'),icon=document.getElementById('refresh-icon');
+  btn.disabled=true;icon.classList.add('spinning');
+  await loadGroupData();
+  checkAlerts();
+  if(activeTab==='dashboard')renderDashboard();
+  else if(activeTab==='calendar')renderCalendar();
+  else if(activeTab==='data')renderData();
+  else if(activeTab==='meds')renderMedsTab();
+  document.getElementById('group-badge').textContent=`Group · ${members.size} member${members.size!==1?'s':''}`;
+  setTimeout(()=>{icon.classList.remove('spinning');btn.disabled=false},500);
+  showToast('Synced ✓');
+}
+
+function saveSession(){try{localStorage.setItem('mm_session',JSON.stringify({user:currentUser,groupId}))}catch(e){}}
+function loadSession(){try{const s=localStorage.getItem('mm_session');if(s){const d=JSON.parse(s);currentUser=d.user;groupId=d.groupId;return true}}catch(e){}return false}
+function clearSession(){try{localStorage.removeItem('mm_session')}catch(e){}}
+
+async function registerMember(){
+  const meta=await storeGet(groupKey('meta'));if(!meta)return;
+  const ml=meta.members||[];if(!ml.includes(currentUser))ml.push(currentUser);
+  meta.members=ml;await storeSet(groupKey('meta'),meta);
+}
+
+async function createGroup(){
+  const name=document.getElementById('create-name').value.trim();
+  const pw=document.getElementById('create-pw').value;
+  const pw2=document.getElementById('create-pw2').value;
+  const err=document.getElementById('create-err');
+  if(!name){err.textContent='Please enter your name';return}
+  if(pw.length<4){err.textContent='Password must be at least 4 characters';return}
+  if(pw!==pw2){err.textContent='Passwords do not match';return}
+  err.textContent='Creating...';
+  groupId=hashStr(pw+pw.split('').reverse().join(''));
+  const existing=await storeGet(groupKey('meta'));
+  if(existing){err.textContent='A group with this password already exists — try joining instead';return}
+  await storeSet(groupKey('meta'),{created:Date.now(),members:[]});
+  await storeSet(groupKey('entries'),[]);
+  await storeSet(groupKey('meds'),DEFAULT_MEDS);
+  await storeSet(groupKey('medlogs'),{});
+  err.textContent='';currentUser=name;saveSession();await registerMember();await loadGroupData();enterApp();
+}
+
+async function joinGroup(){
+  const name=document.getElementById('auth-name').value.trim();
+  const pw=document.getElementById('auth-pw').value;
+  const err=document.getElementById('auth-err');
+  if(!name){err.textContent='Please enter your name';return}
+  if(!pw){err.textContent='Please enter the group password';return}
+  err.textContent='Checking...';
+  groupId=hashStr(pw+pw.split('').reverse().join(''));
+  const meta=await storeGet(groupKey('meta'));
+  if(!meta){err.textContent='No group found — check your password or create a new group';return}
+  err.textContent='';currentUser=name;saveSession();await registerMember();await loadGroupData();enterApp();
+}
+
+function logout(){clearSession();location.reload()}
+function showCreate(){document.getElementById('auth-join-panel').style.display='none';document.getElementById('auth-create-panel').style.display='block'}
+function showJoin(){document.getElementById('auth-create-panel').style.display='none';document.getElementById('auth-join-panel').style.display='block'}
+
+function enterApp(){
+  document.getElementById('screen-auth').classList.remove('active');
+  document.getElementById('screen-app').classList.add('active');
+  document.getElementById('header-user').textContent=currentUser;
+  document.getElementById('group-badge').textContent=`Group · ${members.size} member${members.size!==1?'s':''}`;
+  checkAlerts();renderDashboard();renderCalendar();
+}
+
+// ── Alerts ───────────────────────────────────────────────────────
+function checkAlerts(){
+  const alerts=[];
+  const recent=entries.filter(e=>{const d=new Date(e.date);return(Date.now()-d)/86400000<2&&e.sev>=8});
+  if(recent.length)alerts.push({type:'danger',msg:`Severe event (8+) logged recently by ${[...new Set(recent.map(e=>e.who))].join(', ')}`});
+  const tk=today(),tm=medLogs[tk]||{},nowH=new Date().getHours();
+  const missed=medications.filter(m=>{const h=parseInt(m.time);return!isNaN(h)&&nowH>h+1&&!tm[m.name]});
+  if(missed.length)alerts.push({type:'warning',msg:`Missed medication${missed.length>1?'s':''}: ${missed.map(m=>m.name).join(', ')}`});
+  const banner=document.getElementById('alert-banner'),badge=document.getElementById('med-badge');
+  if(alerts.length){
+    const top=alerts.find(a=>a.type==='danger')?'danger':'warning';
+    banner.className=`alert-banner ${top}`;
+    banner.innerHTML=`<strong>Alert${alerts.length>1?'s':''}</strong><ul class="alert-list">${alerts.map(a=>`<li>${a.msg}</li>`).join('')}</ul>`;
+    badge.style.display=missed.length?'inline':'none';if(missed.length)badge.textContent=missed.length;
+  }else{banner.className='alert-banner';badge.style.display='none'}
+}
+
+// ── Tabs ─────────────────────────────────────────────────────────
+function switchTab(name,btn){
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');btn.classList.add('active');
+  activeTab=name;
+  if(name==='dashboard')renderDashboard();
+  if(name==='calendar')renderCalendar();
+  if(name==='data')renderData();
+  if(name==='meds')renderMedsTab();
+}
+
+// ── Dashboard ────────────────────────────────────────────────────
+function renderDashboard(){
+  const now=new Date();
+  const tm=entries.filter(e=>{const d=new Date(e.date);return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear()});
+  document.getElementById('stat-events').textContent=tm.length||'0';
+  document.getElementById('stat-avg').textContent=tm.length?(tm.reduce((s,e)=>s+e.sev,0)/tm.length).toFixed(1):'—';
+  document.getElementById('stat-members').textContent=members.size;
+  const tk=today(),tm2=medLogs[tk]||{};
+  document.getElementById('stat-meds').textContent=`${Object.keys(tm2).length}/${medications.length}`;
+  renderMedListToday();renderDashChart(tm,now);
+}
+
+function renderMedListToday(){
+  const tk=today(),tm=medLogs[tk]||{};
+  const c=document.getElementById('med-list-today');
+  c.innerHTML=medications.length?medications.map(m=>{
+    const done=tm[m.name];
+    return`<div class="med-row"><div><div style="font-size:14px">${m.name}</div><div style="font-size:11px;color:#aaa">${m.time}</div></div><div style="display:flex;align-items:center;gap:8px"><span class="med-badge ${done?'badge-ok':'badge-due'}">${done?`Taken ${done}`:`Due ${m.time}`}</span>${!done?`<button class="btn-sm" onclick="markMed('${m.name.replace(/'/g,"\\'")}')">Mark taken</button>`:''}</div></div>`;
+  }).join(''):'<div style="padding:.75rem;font-size:13px;color:#aaa">No medications set up yet. Add them in the Meds tab.</div>';
+}
+
+async function markMed(name){
+  const tk=today();if(!medLogs[tk])medLogs[tk]={};
+  const now=new Date();medLogs[tk][name]=`${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+  await storeSet(groupKey('medlogs'),medLogs);
+  renderMedListToday();renderMedsTab();checkAlerts();
+  document.getElementById('stat-meds').textContent=`${Object.keys(medLogs[tk]).length}/${medications.length}`;
+  showToast('Medication logged ✓');
+}
+
+function renderDashChart(me,now){
+  const days=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  const data=Array(days).fill(0);
+  me.forEach(e=>{const d=new Date(e.date);if(!isNaN(d))data[d.getDate()-1]=Math.max(data[d.getDate()-1],e.sev)});
+  const colors=data.map(v=>!v?'rgba(180,180,180,0.15)':v<=2?'#9FE1CB':v<=4?'#FAC775':v<=6?'#EF9F27':v<=8?'#F5C4B3':'#D85A30');
+  const ctx=document.getElementById('dashChart');
+  if(dashChart)dashChart.destroy();
+  dashChart=new Chart(ctx,{
+    type:'bar',
+    data:{labels:Array.from({length:days},(_,i)=>i+1),datasets:[{data,backgroundColor:colors,borderRadius:3,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>c.raw?`Severity: ${c.raw}`:'No events'}}},scales:{y:{min:0,max:10,ticks:{stepSize:2,font:{size:11}},grid:{color:'rgba(128,128,128,0.07)'}},x:{ticks:{autoSkip:true,maxTicksLimit:10,font:{size:10}},grid:{display:false}}}}
+  });
+}
+
+// ── Calendar ─────────────────────────────────────────────────────
+function renderCalendar(){
+  document.getElementById('cal-month-label').textContent=new Date(currentYear,currentMonth,1).toLocaleString('default',{month:'long',year:'numeric'});
+  const grid=document.getElementById('cal-grid');grid.innerHTML='';
+  ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d=>{const el=document.createElement('div');el.className='cal-dow';el.textContent=d;grid.appendChild(el)});
+  const first=new Date(currentYear,currentMonth,1).getDay(),days=new Date(currentYear,currentMonth+1,0).getDate(),ts=today();
+  for(let i=0;i<first;i++){const e=document.createElement('div');e.className='cal-day empty';grid.appendChild(e)}
+  for(let d=1;d<=days;d++){
+    const ds=`${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const de=entries.filter(e=>e.date===ds),ms=de.length?Math.max(...de.map(e=>e.sev)):0;
+    const el=document.createElement('div');el.className='cal-day';
+    if(ds===ts)el.classList.add('today');if(ms)el.setAttribute('data-sev',ms);
+    el.innerHTML=`<span class="cal-day-num">${d}</span>${ms?`<span class="cal-dot" style="background:${ms<=2?'#9FE1CB':ms<=5?'#FAC775':ms<=8?'#F5C4B3':'#D85A30'}"></span>`:''}`;
+    el.addEventListener('click',()=>openLogModal(ds));grid.appendChild(el);
+  }
+}
+
+function changeMonth(dir){currentMonth+=dir;if(currentMonth<0){currentMonth=11;currentYear--}if(currentMonth>11){currentMonth=0;currentYear++}renderCalendar()}
+
+// ── Data ─────────────────────────────────────────────────────────
+function renderData(){
+  const sorted=[...entries].sort((a,b)=>b.date.localeCompare(a.date)).slice(0,30);
+  document.getElementById('entry-list').innerHTML=sorted.length?sorted.map(e=>{
+    const color=e.sev<=3?'#1D9E75':e.sev<=6?'#BA7517':'#D85A30';
+    return`<div class="entry-item"><div class="entry-dot" style="background:${color}"></div><div class="entry-main"><div style="display:flex;gap:6px;align-items:center"><span class="entry-date">${e.date} · sev ${e.sev}/10</span>${e.who?`<span class="entry-who">${e.who}</span>`:''}</div><div class="entry-title">${e.types?.join(', ')||'General cognitive event'}</div>${e.triggers?.length?`<div class="entry-tags">${e.triggers.map(t=>`<span class="entry-tag">${t}</span>`).join('')}</div>`:''}${e.notes?`<div style="font-size:12px;color:#aaa;margin-top:3px">${e.notes}</div>`:''}</div></div>`;
+  }).join(''):'<div style="padding:.75rem;font-size:13px;color:#aaa">No entries yet — log your first event from the Dashboard or Calendar tab.</div>';
+}
+
+// ── Meds tab ─────────────────────────────────────────────────────
+function renderMedsTab(){
+  document.getElementById('med-manage-list').innerHTML=medications.length?medications.map((m,i)=>`<div class="med-manage-row"><div class="med-manage-name">${m.name}</div><div class="med-manage-time">${m.time}</div><button class="med-del" onclick="deleteMed(${i})">×</button></div>`).join(''):'<div style="padding:.75rem;font-size:13px;color:#aaa">No medications yet.</div>';
+  const tk=today(),tm=medLogs[tk]||{},taken=Object.entries(tm);
+  document.getElementById('med-history-today').innerHTML=taken.length?taken.map(([name,time])=>`<div class="med-manage-row"><div class="med-manage-name">${name}</div><div class="med-manage-time" style="color:#1D9E75">Taken ${time}</div></div>`).join(''):'<div style="padding:.75rem;font-size:13px;color:#aaa">None taken yet today.</div>';
+}
+
+async function addMed(){
+  const name=document.getElementById('new-med-name').value.trim(),time=document.getElementById('new-med-time').value.trim();
+  if(!name)return;medications.push({name,time:time||'—'});
+  await storeSet(groupKey('meds'),medications);
+  document.getElementById('new-med-name').value='';document.getElementById('new-med-time').value='';
+  renderMedsTab();showToast('Medication added');
+}
+
+async function deleteMed(i){medications.splice(i,1);await storeSet(groupKey('meds'),medications);renderMedsTab();showToast('Medication removed')}
+
+// ── Log modal ────────────────────────────────────────────────────
+function openLogModal(ds){
+  editingDate=ds||today();selectedSev=0;selectedTypes=new Set();selectedTriggers=new Set();
+  document.getElementById('modal-title').textContent=`Log event · ${editingDate}`;
+  document.getElementById('log-notes').value='';
+  const C=['','#9FE1CB','#9FE1CB','#C0DD97','#FAC775','#FAC775','#EF9F27','#F5C4B3','#F5C4B3','#F0997B','#D85A30'];
+  document.getElementById('sev-picker').innerHTML=Array.from({length:10},(_,i)=>`<button class="sev-btn" style="background:${C[i+1]}" data-sev="${i+1}" onclick="selectSev(${i+1})">${i+1}</button>`).join('');
+  document.getElementById('type-tags').innerHTML=EVENT_TYPES.map(t=>`<button class="tag-btn" onclick="toggleTag(this,'type','${t}')">${t}</button>`).join('');
+  document.getElementById('trigger-tags').innerHTML=TRIGGERS.map(t=>`<button class="tag-btn" onclick="toggleTag(this,'trigger','${t}')">${t}</button>`).join('');
+  document.getElementById('modal-bg').classList.add('open');
+}
+function selectSev(n){selectedSev=n;document.querySelectorAll('.sev-btn').forEach(b=>b.classList.toggle('selected',parseInt(b.dataset.sev)===n))}
+function toggleTag(btn,kind,val){const s=kind==='type'?selectedTypes:selectedTriggers;if(s.has(val)){s.delete(val);btn.classList.remove('selected')}else{s.add(val);btn.classList.add('selected')}}
+function closeModal(){document.getElementById('modal-bg').classList.remove('open')}
+function closeModalOnBg(e){if(e.target===document.getElementById('modal-bg'))closeModal()}
+
+async function saveEntry(){
+  if(!selectedSev){showToast('Please select a severity');return}
+  entries.push({date:editingDate,sev:selectedSev,types:[...selectedTypes],triggers:[...selectedTriggers],notes:document.getElementById('log-notes').value.trim(),who:currentUser,id:Date.now()});
+  await storeSet(groupKey('entries'),entries);
+  closeModal();showToast('Entry saved ✓');checkAlerts();renderDashboard();renderCalendar();
+  lastRefresh=new Date();updateRefreshTs();
+}
+
+// ── CSV ──────────────────────────────────────────────────────────
+function exportCSV(){
+  const rows=[['date','severity','logged_by','types','triggers','notes']];
+  entries.forEach(e=>rows.push([e.date,e.sev,e.who||'',(e.types||[]).join('|'),(e.triggers||[]).join('|'),e.notes||'']));
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`memory-tracker-${today()}.csv`;a.click();
+}
+
+function importCSV(e){
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=async ev=>{
+    const lines=ev.target.result.trim().split('\n').slice(1);let count=0;
+    lines.forEach(line=>{const cols=line.split(',').map(c=>c.replace(/^"|"$/g,'').replace(/""/g,'"'));if(cols[0]&&cols[1]){entries.push({date:cols[0],sev:parseInt(cols[1])||1,who:cols[2]||'',types:cols[3]?cols[3].split('|'):[],triggers:cols[4]?cols[4].split('|'):[],notes:cols[5]||'',id:Date.now()+Math.random()});count++}});
+    await storeSet(groupKey('entries'),entries);showToast(`Imported ${count} entries`);renderDashboard();lastRefresh=new Date();updateRefreshTs();
+  };r.readAsText(file);
+}
+
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2200)}
+
+// ── Boot ─────────────────────────────────────────────────────────
+(async()=>{
+  if(loadSession()&&groupId){
+    const meta=await storeGet(groupKey('meta'));
+    if(meta){await loadGroupData();enterApp()}
+  }
+})();
+</script>
+</body>
+</html>
